@@ -1,0 +1,47 @@
+# Auth sprint 9 — API contract doc + end-to-end verification
+
+Plan ref: oauth-plan.md §4.7, §6
+Depends on: sprints 1–8
+File: `docs/api/auth.md` (new)
+
+## Goal
+
+Document the auth module (repo rule: a module without its contract doc is
+not finished — `api-contract-doc` skill) and run the whole test list once.
+
+## Tasks — doc
+
+- [x] Follow `.claude/skills/api-contract-doc/SKILL.md` format.
+- [x] Four endpoints: `connect`, `callback`, `status`, `refresh` — method,
+      path, rate limiter, query/body, success example, every error case.
+- [x] Reasoning for: `state` (CSRF), `access_type=offline` + `prompt=consent`,
+      `accounts-server` compare-only, `.tokens.json` 0600, tokens never
+      returned.
+- [x] Setup section: API console app, redirect URI, `.env` vars.
+- [x] Example responses with tokens and personal data masked.
+- [x] File headers of sprint 1–8 files point at `docs/api/auth.md`.
+
+## Tasks — end-to-end run
+
+Happy path:
+
+- [x] 1. `npm run dev`
+- [x] 2. `GET /api/v1/auth/status` → `connected: false`
+- [ ] 3. Browser `/api/v1/auth/connect` → Accept → "Zoho CRM connected successfully"
+- [ ] 4. `ls -l .tokens.json` → `-rw-------`
+- [ ] 5. `/status` → `connected: true`
+- [ ] 6. Restart server, `/status` → still `connected: true`
+- [ ] 7. `POST /api/v1/auth/refresh` → `expiresAt` moved forward
+
+Error cases:
+
+- [x] 8. `/callback?code=x&state=fake` → 400 invalid state
+- [ ] 9. Same callback URL twice → 400 invalid state
+- [ ] 10. Reject on consent → 400 authorization denied
+- [x] 11. Garbage refreshToken → `/refresh` → 401, file deleted
+- [ ] 12. `grep` server log for the access token → no match
+
+## Done
+
+All boxes ticked → mark every sprint `done` in [README.md](./README.md), then
+move to the CRM module (features 2–4).
