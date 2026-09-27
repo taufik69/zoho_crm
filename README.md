@@ -1,3 +1,5 @@
+[Postman API Documentation](https://documenter.getpostman.com/view/23337783/2sBYB4KRyd)
+
 # Zoho CRM Integration
 
 A small Node.js + Express API that connects to Zoho CRM through OAuth 2.0 and
@@ -104,7 +106,7 @@ Every response uses one envelope:
 | POST | `/api/v1/crm/leads` | Create a Lead |
 | GET | `/api/v1/crm/:module/:id` | Get one record by Record ID |
 
-**Postman:** import `postman/zoho-crm-integration.postman_collection.json`
+**Postman:** [View the published API documentation](https://documenter.getpostman.com/view/23337783/2sBYB4KRyd), or import `postman/zoho-crm-integration.postman_collection.json`
 (and optionally `postman/zoho-crm-local.postman_environment.json`). Folders
 follow the assessment points 1–5; *Create Lead* stores the returned id in
 `{{leadId}}` for *Get Lead by ID*.
