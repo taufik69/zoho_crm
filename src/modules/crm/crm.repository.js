@@ -22,6 +22,13 @@ const findMany = async (moduleApiName, { page, perPage, fields }) => {
   return { rows: body?.data ?? [], hasMore: body?.info?.more_records ?? false };
 };
 
+const findLeadDuplicate = async (field, value) => {
+  const body = await zohoClient.request('GET', '/Leads/search', {
+    query: { criteria: `(${field}:equals:${value})`, fields: 'id' },
+  });
+  return body?.data?.[0] ?? null;
+};
+
 const findById = async (moduleApiName, id) => {
   const body = await zohoClient.request('GET', `/${moduleApiName}/${id}`);
   return body?.data?.[0] ?? null;
@@ -33,4 +40,4 @@ const createLead = async (payload) => {
   return body.data[0].details;
 };
 
-export default { findMany, findById, createLead };
+export default { findMany, findById, findLeadDuplicate, createLead };

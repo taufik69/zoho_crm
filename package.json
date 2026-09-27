@@ -19,7 +19,8 @@
     "helmet": "^8.0.0",
     "joi": "^17.13.3",
     "pino": "^9.14.0",
-    "pino-http": "^10.5.0"
+    "pino-http": "^10.5.0",
+    "redis": "^6.2.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.14",

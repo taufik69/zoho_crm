@@ -82,8 +82,12 @@ fails.
 
 ## Caching
 
-Nothing is cached: the assessment requires the created record to be readable
-immediately, and a cached list would hide it.
+List and record GET responses use Redis with a configurable TTL
+(`REDIS_CACHE_TTL_SECONDS`, default 300). Cache keys include a global CRM
+version. A successful lead create increments that version, so subsequent GETs
+use fresh keys immediately; old entries expire by TTL. Redis is optional: if it
+is unavailable, requests bypass the cache and read from Zoho. Configure it with
+`REDIS_URL` (default `redis://localhost:6379`).
 
 ## Account enumeration
 
@@ -182,7 +186,7 @@ own Zoho duplicate rule rejects the second (→ `409`).
 | `400` | `"Malformed JSON body"` — body is not valid JSON (global handler) |
 | `400` | Zoho rejected a field — `data: { code, field }` |
 | `401` / `403` | not connected / expired / missing `ZohoCRM.modules.leads` scope |
-| `409` | Zoho duplicate rule matched |
+| `409` | Email or phone already exists, or a Zoho duplicate rule matched |
 | `429` | `apiLimiter`, or Zoho API credits |
 | `502` / `504` | Zoho unreachable / timed out |
 

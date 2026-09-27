@@ -58,6 +58,10 @@ const config = {
   // Browser origin allowed through CORS. Optional — a dev machine without it
   // boots permissive rather than refusing to start.
   clientOrigin: process.env.CLIENT_ORIGIN || '*',
+  redis: {
+    url: process.env.REDIS_URL || 'redis://localhost:6379',
+    cacheTtlSeconds: Number(process.env.REDIS_CACHE_TTL_SECONDS || 300),
+  },
   // Pino's level threshold (src/config/logger.js). Optional: development
   // defaults to `debug`, production to `info`.
   logLevel: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
