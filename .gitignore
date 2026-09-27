@@ -11,6 +11,4 @@ npm-debug.log*
 .idea/
 .vscode/
 
-# Zoho OAuth tokens persisted locally (see src/integrations/zoho/token.store.js)
-.tokens.json
-.tokens.json.tmp
+

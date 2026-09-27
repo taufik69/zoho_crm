@@ -13,27 +13,27 @@
  *      and docs/api/auth.md
  */
 
-import express from 'express';
+import express from "express";
 
-import authController from './auth.controller.js';
-import { callbackQuerySchema } from './auth.validator.js';
-import validate from '../../shared/middlewares/validate.js';
-import asyncHandler from '../../shared/utils/asyncHandler.js';
-import { authLimiter } from '../../shared/middlewares/rateLimiter.js';
+import authController from "./auth.controller.js";
+import { callbackQuerySchema } from "./auth.validator.js";
+import validate from "../../shared/middlewares/validate.js";
+import asyncHandler from "../../shared/utils/asyncHandler.js";
+import { authLimiter } from "../../shared/middlewares/rateLimiter.js";
 
 const router = express.Router();
 
-router.get('/connect', authLimiter, asyncHandler(authController.connect));
+router.get("/connect", authLimiter, asyncHandler(authController.connect));
 
 router.get(
-  '/callback',
+  "/callback",
   authLimiter,
-  validate(callbackQuerySchema, 'query'),
-  asyncHandler(authController.callback)
+  validate(callbackQuerySchema, "query"),
+  asyncHandler(authController.callback),
 );
 
-router.get('/status', asyncHandler(authController.status));
+router.get("/status", asyncHandler(authController.status));
 
-router.post('/refresh', authLimiter, asyncHandler(authController.refresh));
+router.post("/refresh", authLimiter, asyncHandler(authController.refresh));
 
 export default router;
