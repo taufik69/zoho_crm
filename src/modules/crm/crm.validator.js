@@ -33,14 +33,14 @@ const listQuerySchema = Joi.object({
   perPage: Joi.number().integer().min(1).max(MAX_PAGE_SIZE).default(20),
 });
 
-// TODO: the real create rules — Last_Name (and Company) are mandatory in
-// Zoho by default; decide lengths, email/phone format, trimming/lowercasing.
+// Last_Name and Company are mandatory on Zoho Leads; checking them here gives
+// a field-level 400 before any Zoho call. Lengths follow Zoho's field limits.
 const createLeadSchema = Joi.object({
-  firstName: Joi.string().trim(),
-  lastName: Joi.string().trim(),
-  company: Joi.string().trim(),
-  email: Joi.string().trim(),
-  phone: Joi.string().trim(),
+  firstName: Joi.string().trim().max(40),
+  lastName: Joi.string().trim().max(80).required(),
+  company: Joi.string().trim().max(200).required(),
+  email: Joi.string().trim().lowercase().email().max(100),
+  phone: Joi.string().trim().pattern(/^\+?[0-9 ()-]{6,30}$/),
 });
 
 export { moduleParamsSchema, recordParamsSchema, listQuerySchema, createLeadSchema };

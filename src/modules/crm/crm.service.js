@@ -1,6 +1,6 @@
 /**
- * Business rules for CRM records: resolve the Zoho module name, apply
- * duplicate policy on create, decide what "not found" means.
+ * Business rules for CRM records: resolve the Zoho module name, shape
+ * records through the DTO, decide what "not found" means.
  *
  * Never touches req/res, never calls Zoho directly (crm.repository.js does).
  * Throws AppError; Zoho-level failures arrive already translated by
@@ -14,24 +14,32 @@ import crmRepository from './crm.repository.js';
 import { toLeadPayload, toRecordResponse, toRecordResponseList } from './crm.dto.js';
 import AppError from '../../shared/utils/AppError.js';
 import httpStatus from '../../shared/constants/httpStatus.js';
+import { CRM_MODULES } from '../../shared/constants/zoho.js';
 
-const notImplemented = (name) => {
-  throw new AppError(httpStatus.NOT_IMPLEMENTED, `${name} is not implemented yet`);
+const list = async (moduleSlug, { page, perPage }) => {
+  const { apiName, fields } = CRM_MODULES[moduleSlug];
+  const { rows, hasMore } = await crmRepository.findMany(apiName, { page, perPage, fields });
+
+  return {
+    data: toRecordResponseList(moduleSlug, rows),
+    pagination: { page, perPage, hasMore },
+  };
 };
 
-// TODO: map slug → Zoho module (CRM_MODULES), fetch the page, return
-// { data: toRecordResponseList(rows), pagination: { page, perPage, hasMore } }.
-// eslint-disable-next-line no-unused-vars
-const list = async (module, { page, perPage }) => notImplemented('list');
+// Zoho answers 204 (null from the repository) for an id that does not exist.
+const getById = async (moduleSlug, id) => {
+  const row = await crmRepository.findById(CRM_MODULES[moduleSlug].apiName, id);
 
-// TODO: fetch by id; Zoho answers 204 (empty) for a missing record — turn
-// that into AppError(NOT_FOUND). Return toRecordResponse(row).
-// eslint-disable-next-line no-unused-vars
-const getById = async (module, id) => notImplemented('getById');
+  if (!row) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Record not found');
+  }
 
-// TODO: duplicate policy (e.g. Email as duplicate_check_fields, or search
-// first), create via repository, return the created id + fetched record.
-// eslint-disable-next-line no-unused-vars
-const createLead = async (body) => notImplemented('createLead');
+  return toRecordResponse(moduleSlug, row);
+};
+
+const createLead = async (body) => {
+  const { id } = await crmRepository.createLead(toLeadPayload(body));
+  return { id };
+};
 
 export default { list, getById, createLead };

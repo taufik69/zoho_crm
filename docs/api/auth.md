@@ -153,7 +153,9 @@ body, so `zoho.oauth.js` checks the body, not only the status. The request
 body is never logged — it holds the client secret and the code or refresh
 token. The logger additionally redacts `access_token`, `refresh_token`,
 `client_secret`, `accessToken` and `refreshToken` at any depth
-(`src/config/logger.js`).
+(`src/config/logger.js`), and the request logger masks `code` and `state` in
+query strings (`src/shared/middlewares/logger.middleware.js`) — the callback
+URL carries a live authorization code, which key-based redaction cannot see.
 
 ---
 

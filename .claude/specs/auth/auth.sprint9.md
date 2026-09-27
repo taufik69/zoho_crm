@@ -27,19 +27,23 @@ Happy path:
 
 - [x] 1. `npm run dev`
 - [x] 2. `GET /api/v1/auth/status` → `connected: false`
-- [ ] 3. Browser `/api/v1/auth/connect` → Accept → "Zoho CRM connected successfully"
-- [ ] 4. `ls -l .tokens.json` → `-rw-------`
-- [ ] 5. `/status` → `connected: true`
-- [ ] 6. Restart server, `/status` → still `connected: true`
-- [ ] 7. `POST /api/v1/auth/refresh` → `expiresAt` moved forward
+- [x] 3. Browser `/api/v1/auth/connect` → Accept → "Zoho CRM connected successfully"
+- [x] 4. `ls -l .tokens.json` → `-rw-------`
+- [x] 5. `/status` → `connected: true`
+- [x] 6. Restart server, `/status` → still `connected: true`
+- [x] 7. `POST /api/v1/auth/refresh` → `expiresAt` moved forward
 
 Error cases:
 
 - [x] 8. `/callback?code=x&state=fake` → 400 invalid state
-- [ ] 9. Same callback URL twice → 400 invalid state
-- [ ] 10. Reject on consent → 400 authorization denied
+- [x] 9. Same callback URL twice → 400 invalid state
+      *(same `state` sent twice: 1st → 400 invalid code, 2nd → 400 invalid state)*
+- [x] 10. Reject on consent → 400 authorization denied
+      *(verified with the `error=access_denied` query Zoho sends on Reject)*
 - [x] 11. Garbage refreshToken → `/refresh` → 401, file deleted
-- [ ] 12. `grep` server log for the access token → no match
+- [x] 12. `grep` server log for the access token → no match
+      *Found and fixed: the request log wrote the callback `code`/`state` in the
+      URL. `logger.middleware.js` now masks them (`code=[redacted]`).*
 
 ## Done
 

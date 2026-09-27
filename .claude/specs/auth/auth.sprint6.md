@@ -29,12 +29,12 @@ checks in this order:
 
 ## Acceptance
 
-- [ ] Browser `/api/v1/auth/connect` → Accept → JSON
+- [x] Browser `/api/v1/auth/connect` → Accept → JSON
       `{ success: true, message: "Zoho CRM connected successfully", data: { connected: true, expiresAt, apiDomain } }`.
-- [ ] `.tokens.json` created, `-rw-------`.
-- [ ] Response and log contain no token values.
-- [ ] Reload the same callback URL → 400 invalid state.
+- [x] `.tokens.json` created, `-rw-------`.
+- [x] Response and log contain no token values.
+- [x] Reload the same callback URL → 400 invalid state.
 - [x] `/api/v1/auth/callback?code=x&state=fake` → 400 invalid state.
-- [ ] Click **Reject** on consent → 400 authorization denied.
+- [x] Click **Reject** on consent → 400 authorization denied.
 
-> Unchecked items need a real Zoho consent in the browser — run in sprint 9.
+> Verified 2026-09-27 against real Zoho (consent accepted in the browser).

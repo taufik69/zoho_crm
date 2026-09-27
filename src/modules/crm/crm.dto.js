@@ -13,19 +13,28 @@
  *      and docs/api/crm.md
  */
 
-// TODO: map the validated body to Zoho API names
-// (First_Name, Last_Name, Company, Email, Phone, ...).
-// eslint-disable-next-line no-unused-vars
-const toLeadPayload = (body) => ({});
+const toLeadPayload = ({ firstName, lastName, company, email, phone }) => ({
+  First_Name: firstName,
+  Last_Name: lastName,
+  Company: company,
+  Email: email,
+  Phone: phone,
+});
 
-// TODO: Record ID, Name, Email and one additional field — Name is
-// Full_Name on Leads/Contacts but Account_Name on Accounts.
-const toRecordResponse = (row) => {
-  if (!row) return null;
-
-  return { id: row.id };
+// Record ID, Name, Email + one additional field per module. Lookup fields
+// (Contacts.Account_Name) are objects `{ name, id }` in Zoho.
+const RECORD_MAPPERS = {
+  leads: (row) => ({ name: row.Full_Name, email: row.Email, company: row.Company }),
+  contacts: (row) => ({ name: row.Full_Name, email: row.Email, accountName: row.Account_Name?.name }),
+  accounts: (row) => ({ name: row.Account_Name, email: null, phone: row.Phone }),
 };
 
-const toRecordResponseList = (rows) => (rows ?? []).map(toRecordResponse);
+const toRecordResponse = (moduleSlug, row) => {
+  if (!row) return null;
+
+  return { id: row.id, ...RECORD_MAPPERS[moduleSlug](row) };
+};
+
+const toRecordResponseList = (moduleSlug, rows) => rows.map((row) => toRecordResponse(moduleSlug, row));
 
 export { toLeadPayload, toRecordResponse, toRecordResponseList };

@@ -31,9 +31,9 @@ Build the Zoho consent URL the browser is redirected to.
 
 ## Acceptance
 
-- [ ] Printed URL opened in a browser shows the Zoho consent screen for
+- [x] Printed URL opened in a browser shows the Zoho consent screen for
       "CRM Integration Test App" with the three scopes listed.
-      *Needs a human in the browser — checked in sprint 9, step 3.*
+      *Verified in sprint 9, step 3.*
 - [x] URL contains `redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fapi%2Fv1%2Fauth%2Fcallback`.
 - [x] No `client_secret` in the URL.
 

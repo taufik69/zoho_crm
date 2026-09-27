@@ -27,7 +27,7 @@ the refresh token itself is dead.
 
 ## Acceptance
 
-- [ ] Connected: `curl -X POST .../auth/refresh` → 200, `expiresAt` later than
+- [x] Connected: `curl -X POST .../auth/refresh` → 200, `expiresAt` later than
       before; `.tokens.json` still has the same `refreshToken`.
 - [x] Not connected → 401 "Zoho is not connected".
 - [x] Edit `.tokens.json` refreshToken to garbage, restart, refresh →
@@ -38,4 +38,4 @@ the refresh token itself is dead.
 Automatic refresh before CRM calls, retry-once on `INVALID_TOKEN`, and the
 single-flight refresh lock — these go in `zoho.client.js` (CRM feature 2).
 
-> Unchecked items need a real Zoho consent in the browser — run in sprint 9.
+> Verified 2026-09-27 against real Zoho (consent accepted in the browser).

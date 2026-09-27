@@ -25,8 +25,8 @@ Tell the caller whether Zoho is connected, without exposing any token.
 ## Acceptance
 
 - [x] No `.tokens.json` → `200 { connected: false }`.
-- [ ] After sprint 6 connect → `200 { connected: true, expiresAt, apiDomain, scopes: [...] }`.
+- [x] After sprint 6 connect → `200 { connected: true, expiresAt, apiDomain, scopes: [...] }`.
 - [x] Restart the server → still `connected: true`.
 - [x] `curl .../status | grep -i token` → no match.
 
-> Unchecked items need a real Zoho consent in the browser — run in sprint 9.
+> Verified 2026-09-27 against real Zoho (consent accepted in the browser).

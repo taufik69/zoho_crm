@@ -15,6 +15,10 @@
  * few seconds would otherwise be most of the log volume in production and
  * bury the requests someone actually wants to read.
  *
+ * OAuth `code` and `state` values in a query string are masked: the Zoho
+ * callback URL carries a live authorization code, and the root logger's
+ * redaction only covers object keys, not text inside a URL.
+ *
  * See src/config/logger.js and .claude/skills/backend-scaffold/SKILL.md
  */
 
@@ -23,7 +27,10 @@ import { randomUUID } from 'node:crypto';
 
 import { createLogger } from '../../config/logger.js';
 
-const url = (req) => req.originalUrl ?? req.url;
+const SENSITIVE_QUERY_PARAMS = /([?&](?:code|state)=)[^&]*/g;
+
+const maskUrl = (rawUrl) => rawUrl.replace(SENSITIVE_QUERY_PARAMS, '$1[redacted]');
+const url = (req) => maskUrl(req.originalUrl ?? req.url);
 const path = (req) => url(req).split('?')[0];
 
 const httpLogger = pinoHttp({
@@ -62,7 +69,7 @@ const httpLogger = pinoHttp({
     req: (req) => ({
       id: req.id,
       method: req.method,
-      url: req.originalUrl ?? req.url,
+      url: maskUrl(req.originalUrl ?? req.url),
       remoteAddress: req.remoteAddress,
     }),
     res: (res) => ({ statusCode: res.statusCode }),

@@ -14,6 +14,10 @@
  *   - anything else        → a bug or an outage. Log the real error
  *                            server-side, respond with a generic 500.
  *
+ * One non-AppError is operational too: express.json() rejects a malformed
+ * body with `type: 'entity.parse.failed'`. That is the caller's mistake, so
+ * it becomes a 400 here instead of falling into the 500 path.
+ *
  * There is no Prisma-code mapping here (the stock scaffold has one): this app
  * has no database. The equivalent translation for Zoho — INVALID_TOKEN,
  * MANDATORY_NOT_FOUND, INVALID_MODULE, DUPLICATE_DATA → AppError — happens
@@ -44,8 +48,13 @@ const notFound = (req, res, next) => {
   next(new AppError(httpStatus.NOT_FOUND, `Route not found: ${req.method} ${req.originalUrl}`));
 };
 
+const toOperational = (err) =>
+  err.type === 'entity.parse.failed' ? new AppError(httpStatus.BAD_REQUEST, 'Malformed JSON body') : err;
+
 // eslint-disable-next-line no-unused-vars
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (rawErr, req, res, next) => {
+  const err = toOperational(rawErr);
+
   // --- KNOWN: operational, raised deliberately by our own code ---
   if (err instanceof AppError) {
     const data = err.details ?? null;

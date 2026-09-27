@@ -32,11 +32,11 @@ File: `src/modules/auth/auth.service.js`
 - [x] `curl -i localhost:5000/api/v1/auth/connect` → `302`, `Location`
       starts with `https://accounts.zoho.com/oauth/v2/auth?`.
 - [x] Two calls → two different `state` values.
-- [ ] Browser: `/api/v1/auth/connect` shows the Zoho consent screen.
+- [x] Browser: `/api/v1/auth/connect` shows the Zoho consent screen.
 
 ## Note
 
 `authLimiter` allows 10 requests / 15 min on connect + callback. Restart the
 server if testing hits the limit.
 
-> Unchecked items need a real Zoho consent in the browser — run in sprint 9.
+> Verified 2026-09-27 against real Zoho (consent accepted in the browser).

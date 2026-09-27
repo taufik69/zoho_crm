@@ -14,18 +14,23 @@
 
 import zohoClient from '../../integrations/zoho/zoho.client.js';
 
-// TODO: GET /{module}?page&per_page&fields — `fields` is REQUIRED on GET
-// records in v8; pass the API names you display.
-// eslint-disable-next-line no-unused-vars
-const findMany = async (moduleApiName, { page, perPage, fields }) =>
-  zohoClient.request('GET', `/${moduleApiName}`);
+const findMany = async (moduleApiName, { page, perPage, fields }) => {
+  const body = await zohoClient.request('GET', `/${moduleApiName}`, {
+    query: { fields: fields.join(','), page, per_page: perPage },
+  });
 
-// TODO: GET /{module}/{id}; return data[0] or null.
-const findById = async (moduleApiName, id) => zohoClient.request('GET', `/${moduleApiName}/${id}`);
+  return { rows: body?.data ?? [], hasMore: body?.info?.more_records ?? false };
+};
 
-// TODO: POST /Leads with { data: [payload] } (+ duplicate_check_fields /
-// trigger as decided); return the created record's details.
-// eslint-disable-next-line no-unused-vars
-const createLead = async (payload) => zohoClient.request('POST', '/Leads');
+const findById = async (moduleApiName, id) => {
+  const body = await zohoClient.request('GET', `/${moduleApiName}/${id}`);
+  return body?.data?.[0] ?? null;
+};
+
+// Returns the created record's `details` ({ id, Created_Time, ... }).
+const createLead = async (payload) => {
+  const body = await zohoClient.request('POST', '/Leads', { body: { data: [payload] } });
+  return body.data[0].details;
+};
 
 export default { findMany, findById, createLead };

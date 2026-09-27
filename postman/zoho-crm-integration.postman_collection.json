@@ -1,0 +1,874 @@
+{
+  "info": {
+    "name": "Zoho CRM Integration",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "W3SCLOUD assessment, Part 1. Run order: Health \u2192 Auth/Status (connect in a BROWSER first, not Postman) \u2192 CRM \u2192 Error demos.\n\nCreate Lead saves the returned id into the `leadId` collection variable, so Get Lead by ID works right after."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "leadId",
+      "value": "7617346000000702001"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Liveness probe. Raw body, not the envelope."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "1 \u2014 Auth (OAuth)",
+      "item": [
+        {
+          "name": "Connect (open in browser)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/connect",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "connect"
+              ]
+            },
+            "description": "Point 1. Returns 302 to the Zoho consent page. OPEN THIS URL IN A BROWSER, log in, click Accept. In Postman you only see the 302 (turn off Settings \u2192 Automatically follow redirects to see the Location header)."
+          }
+        },
+        {
+          "name": "Callback (Zoho calls this)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/callback?code=<from-zoho>&state=<from-connect>",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "callback"
+              ],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "<from-zoho>",
+                  "description": "Authorization code \u2014 Zoho puts it here"
+                },
+                {
+                  "key": "state",
+                  "value": "<from-connect>",
+                  "description": "Must be a state issued by /connect, single use"
+                }
+              ]
+            },
+            "description": "Zoho redirects the browser here after Accept. Calling it by hand with made-up values returns 400 \"Invalid or expired OAuth state\" \u2014 that is the CSRF protection working."
+          }
+        },
+        {
+          "name": "Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "status"
+              ]
+            },
+            "description": "connected true/false, expiresAt, apiDomain, scopes. Never returns a token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh access token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Forces a refresh from the stored refresh token. expiresAt moves forward. 401 if not connected."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 \u2014 Read records",
+      "item": [
+        {
+          "name": "List Leads",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/crm/leads?page=1&perPage=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": ">= 1"
+                },
+                {
+                  "key": "perPage",
+                  "value": "20",
+                  "description": "1\u2013200"
+                }
+              ]
+            },
+            "description": "Point 2. Each item: id, name, email, company."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Contacts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/crm/contacts?page=1&perPage=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "contacts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": ""
+                },
+                {
+                  "key": "perPage",
+                  "value": "20",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Each item: id, name, email, accountName."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Accounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/crm/accounts?page=1&perPage=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "accounts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": ""
+                },
+                {
+                  "key": "perPage",
+                  "value": "20",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Each item: id, name, email (always null \u2014 Zoho Accounts have no Email field), phone."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Leads \u2014 page 2 of 5",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/crm/leads?page=2&perPage=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2",
+                  "description": ""
+                },
+                {
+                  "key": "perPage",
+                  "value": "5",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Pagination demo: check pagination.hasMore."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 \u2014 Create Lead",
+      "item": [
+        {
+          "name": "Create Lead",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/crm/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads"
+              ]
+            },
+            "description": "Point 3. lastName and company required; firstName, email, phone optional. Returns 201 { id } and saves it to {{leadId}}. Then refresh Zoho CRM \u2192 Leads to see it.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"company\": \"Postman Test Ltd\",\n  \"email\": \"jane.doe@example.com\",\n  \"phone\": \"+8801711111111\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });",
+                  "const id = pm.response.json().data && pm.response.json().data.id;",
+                  "if (id) { pm.collectionVariables.set('leadId', id); console.log('leadId =', id); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 \u2014 Get record by ID",
+      "item": [
+        {
+          "name": "Get Lead by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/crm/leads/{{leadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads",
+                "{{leadId}}"
+              ]
+            },
+            "description": "Point 4. Uses {{leadId}} saved by Create Lead."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Contact by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/crm/contacts/7617346000000698159",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "contacts",
+                "7617346000000698159"
+              ]
+            },
+            "description": "Any contact id from List Contacts."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5 \u2014 Error handling demos",
+      "item": [
+        {
+          "name": "Invalid module \u2192 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/crm/deals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "deals"
+              ]
+            },
+            "description": "module must be leads | contacts | accounts."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Missing required fields \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/crm/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads"
+              ]
+            },
+            "description": "lastName and company missing \u2192 400 with both field names.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"OnlyFirst\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid email \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/crm/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lastName\": \"Doe\",\n  \"company\": \"X\",\n  \"email\": \"not-an-email\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown field \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/crm/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lastName\": \"Doe\",\n  \"company\": \"X\",\n  \"foo\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Malformed JSON \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/crm/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"lastName\": \"Doe\", bad json",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Non-numeric id \u2192 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/crm/leads/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads",
+                "abc"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Record not found \u2192 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/crm/leads/7617346000000000001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads",
+                "7617346000000000001"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "perPage too large \u2192 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/crm/leads?perPage=500",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crm",
+                "leads"
+              ],
+              "query": [
+                {
+                  "key": "perPage",
+                  "value": "500",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown route \u2192 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/nope",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "nope"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Callback with fake state \u2192 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/callback?code=fake&state=fake",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "callback"
+              ],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "fake",
+                  "description": ""
+                },
+                {
+                  "key": "state",
+                  "value": "fake",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('envelope shape', () => { const b = pm.response.json(); pm.expect(b).to.have.keys(['success','statusCode','message','data'].concat(b.pagination ? ['pagination'] : [])); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

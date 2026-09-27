@@ -11,10 +11,10 @@ order; a sprint starts only after the previous one is reviewed.
 | [3](./auth.sprint3.md) | Token endpoint + Zoho error mapping | `zoho.oauth.js` | done |
 | [4](./auth.sprint4.md) | `/connect` + `state` generation | `auth.service.js` | done |
 | [5](./auth.sprint5.md) | Callback validator | `auth.validator.js` | done |
-| [6](./auth.sprint6.md) | `/callback`: verify state, exchange, save | `auth.service.js` | code done, browser check in sprint 9 |
+| [6](./auth.sprint6.md) | `/callback`: verify state, exchange, save | `auth.service.js` | done |
 | [7](./auth.sprint7.md) | `/status` + DTO | `auth.service.js`, `auth.dto.js` | done |
 | [8](./auth.sprint8.md) | `/refresh` + revoked refresh token | `auth.service.js` | done |
-| [9](./auth.sprint9.md) | API contract doc + end-to-end verification | `docs/api/auth.md` | doc done, browser run pending |
+| [9](./auth.sprint9.md) | API contract doc + end-to-end verification | `docs/api/auth.md` | done |
 
 ## Rules every sprint follows
 

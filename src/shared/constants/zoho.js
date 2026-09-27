@@ -12,12 +12,13 @@
 
 const CRM_API_VERSION = 'v8';
 
-// TODO: confirm which modules the app exposes (assessment: Leads, Contacts or
-// Accounts) and the lowercase URL slug each one is reached by.
+// Allowed module slugs → Zoho API name + the fields we read. `fields` is
+// required on GET records in v8; we ask only for what we display.
 const CRM_MODULES = Object.freeze({
-  leads: 'Leads',
-  contacts: 'Contacts',
-  accounts: 'Accounts',
+  leads: { apiName: 'Leads', fields: ['Full_Name', 'Email', 'Company'] },
+  contacts: { apiName: 'Contacts', fields: ['Full_Name', 'Email', 'Account_Name'] },
+  // Accounts have no Email field by default — email is returned as null.
+  accounts: { apiName: 'Accounts', fields: ['Account_Name', 'Phone'] },
 });
 
 // Zoho's own ceiling for `per_page` on GET records.
