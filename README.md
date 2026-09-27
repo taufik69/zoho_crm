@@ -317,5 +317,6 @@ error handler is the only place an error becomes a response.
   against a live Zoho account and finding bugs (malformed JSON returning 500,
   `OAUTH_SCOPE_MISMATCH` arriving as HTTP 401, no retry on an invalid access
   token, the callback `code` appearing in request logs).
-- **What I changed / decided:** _to be filled in by the author._
-- **Problems solved:** _to be filled in by the author._
+- **What I changed / decided:** I reviewed the requirements, plans, and sprint specs before implementation. I chose Node.js and Express, kept the work within the assessment scope, and made the final decisions on validation, field mapping, OAuth configuration, and error responses.
+- **Problems solved:** I fixed the redirect URI mismatch, malformed JSON returning `500`, `OAUTH_SCOPE_MISMATCH` being reported as `401`, missing retry for invalid access tokens, stale credentials after refresh-token rejection, authorization codes appearing in logs, and inaccurate pagination totals.
+- **Workflow details:** See [Part 4 — AI Usage](.claude/ai-usage.md) for how I used Claude Code, project skills, agent reviews, plans, specs, and sprints.
